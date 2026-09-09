@@ -78,13 +78,20 @@ class WorkspaceController extends Controller
             // 5. Create Admin User inside the new DB
             $user = User::create([
                 'uname' => $landlordUser->name,
-                'email' => $landlordUser->email, // Make sure admin can login with email
-                'password' => $landlordUser->password, // same hashed password
+                'email' => $landlordUser->email,
+                'password' => $landlordUser->password,
                 'tenant' => $tenant->id,
-                'userrole' => 1, 
-                'is_waiter' => 0,
+                'userrole' => 1, // Admin
                 'usertype' => 1,
+                'is_waiter' => 0,
                 'img' => 'default.png',
+            ]);
+
+            // 6. Seed the Chart of Accounts Recursively
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\ChartOfAccountsSeeder',
+                '--database' => 'mysql', // Ensure it runs on the tenant DB
+                '--force' => true
             ]);
 
             DB::connection('landlord')->commit();
