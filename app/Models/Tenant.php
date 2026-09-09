@@ -6,6 +6,8 @@ use Spatie\Multitenancy\Models\Tenant as BaseTenant;
 
 class Tenant extends BaseTenant
 {
+    protected $connection = 'landlord';
+
     protected $table = 'tenants';
 
     protected $guarded = ['id'];

@@ -3,7 +3,10 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
     company_name: '',
+    company_code: '',
     uname: '',
+    email: '',
+    phone: '',
     password: '',
     password_confirmation: '',
 });
@@ -16,7 +19,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="تسجيل جديد - إنشاء شركة" />
+    <Head title="إنشاء حساب وتسجيل الشركة" />
 
     <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 dir-rtl">
         <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
@@ -55,8 +58,22 @@ const submit = () => {
                     </div>
 
                     <div>
+                        <label for="company_code" class="block text-sm font-medium text-gray-700 text-right">
+                            الرابط الفرعي للشركة (Subdomain)
+                        </label>
+                        <div class="mt-1 flex rounded-md shadow-sm" dir="ltr">
+                            <input id="company_code" v-model="form.company_code" type="text" required
+                                class="flex-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-l-md placeholder-gray-400 focus:outline-none focus:ring-[#017E84] focus:border-[#017E84] sm:text-sm text-right" placeholder="mycompany" />
+                            <span class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                .localhost
+                            </span>
+                        </div>
+                        <p v-if="form.errors.company_code" class="mt-2 text-sm text-red-600 text-right">{{ form.errors.company_code }}</p>
+                    </div>
+
+                    <div>
                         <label for="uname" class="block text-sm font-medium text-gray-700 text-right">
-                            اسم المستخدم (المدير)
+                            الاسم بالكامل
                         </label>
                         <div class="mt-1">
                             <input id="uname" v-model="form.uname" type="text" required
@@ -66,11 +83,33 @@ const submit = () => {
                     </div>
 
                     <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 text-right">
+                            البريد الإلكتروني
+                        </label>
+                        <div class="mt-1">
+                            <input id="email" v-model="form.email" type="email" autocomplete="email" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#017E84] focus:border-[#017E84] sm:text-sm text-right" />
+                        </div>
+                        <p v-if="form.errors.email" class="mt-2 text-sm text-red-600 text-right">{{ form.errors.email }}</p>
+                    </div>
+
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700 text-right">
+                            رقم الهاتف
+                        </label>
+                        <div class="mt-1">
+                            <input id="phone" v-model="form.phone" type="tel" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#017E84] focus:border-[#017E84] sm:text-sm text-right" />
+                        </div>
+                        <p v-if="form.errors.phone" class="mt-2 text-sm text-red-600 text-right">{{ form.errors.phone }}</p>
+                    </div>
+
+                    <div>
                         <label for="password" class="block text-sm font-medium text-gray-700 text-right">
                             كلمة المرور
                         </label>
                         <div class="mt-1">
-                            <input id="password" v-model="form.password" type="password" required
+                            <input id="password" v-model="form.password" type="password" autocomplete="new-password" required
                                 class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#017E84] focus:border-[#017E84] sm:text-sm text-right" />
                         </div>
                         <p v-if="form.errors.password" class="mt-2 text-sm text-red-600 text-right">{{ form.errors.password }}</p>
@@ -81,7 +120,7 @@ const submit = () => {
                             تأكيد كلمة المرور
                         </label>
                         <div class="mt-1">
-                            <input id="password_confirmation" v-model="form.password_confirmation" type="password" required
+                            <input id="password_confirmation" v-model="form.password_confirmation" type="password" autocomplete="new-password" required
                                 class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#017E84] focus:border-[#017E84] sm:text-sm text-right" />
                         </div>
                     </div>
@@ -97,9 +136,3 @@ const submit = () => {
         </div>
     </div>
 </template>
-
-<style scoped>
-.dir-rtl {
-    direction: rtl;
-}
-</style>

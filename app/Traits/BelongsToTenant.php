@@ -13,6 +13,8 @@ trait BelongsToTenant
     protected static function bootBelongsToTenant(): void
     {
         // Global scope to isolate records by current active tenant
+        // Removed: We are now using Database-per-tenant, so tables are naturally isolated.
+        /*
         static::addGlobalScope('tenant', function (Builder $builder) {
             if (Tenant::checkCurrent()) {
                 $table = $builder->getModel()->getTable();
@@ -23,6 +25,7 @@ trait BelongsToTenant
                 });
             }
         });
+        */
 
         // Auto-fill tenant id on creating if not explicitly provided
         static::creating(function ($model) {

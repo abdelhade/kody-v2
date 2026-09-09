@@ -2,106 +2,111 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tenant;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use App\Models\LandlordUser;
 use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    /**
-     * Show the login page.
-     */
-    public function showLogin(): Response
+    public function showLogin()
     {
+        if (\App\Models\Tenant::current()) {
+            if (Auth::guard('web')->check()) {
+                return redirect()->route('dashboard');
+            }
+        } else {
+            if (Auth::guard('landlord')->check()) {
+                return redirect()->route('workspaces.create');
+            }
+        }
         return Inertia::render('Auth/Login');
     }
 
-    /**
-     * Handle login authentication.
-     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'uname' => 'required|string',
-            'password' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required'
         ]);
 
-        // Attempt login using 'uname'
-        if (Auth::attempt(['uname' => $credentials['uname'], 'password' => $credentials['password']])) {
-            $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
+        $tenantResolved = \App\Models\Tenant::current();
+
+        if ($tenantResolved) {
+            // Tenant Login (Employees & Company Owners on Subdomain)
+            if (Auth::guard('web')->attempt($credentials, $request->boolean('remember'))) {
+                $request->session()->regenerate();
+                return redirect()->route('dashboard');
+            }
+        } else {
+            // Landlord Login (Company Owners on Main Domain)
+            if (Auth::guard('landlord')->attempt($credentials, $request->boolean('remember'))) {
+                $request->session()->regenerate();
+                return redirect()->route('workspaces.create');
+            }
         }
 
         return back()->withErrors([
-            'uname' => 'البيانات المدخلة غير صحيحة.',
-        ])->onlyInput('uname');
+            'error' => 'بيانات الدخول غير صحيحة.'
+        ]);
     }
 
-    /**
-     * Show the registration page.
-     */
-    public function showRegister(): Response
+    public function showRegister()
     {
+        if (!\App\Models\Tenant::current() && Auth::guard('landlord')->check()) {
+            return redirect()->route('workspaces.create');
+        }
         return Inertia::render('Auth/Register');
     }
 
-    /**
-     * Handle tenant registration and user creation.
-     */
     public function register(Request $request)
     {
+        if ($request->has('company_code')) {
+            $request->merge([
+                'company_code' => Str::slug($request->company_code)
+            ]);
+        }
+
         $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'uname' => 'required|string|max:255|unique:users,uname',
+            'uname' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:landlord.landlord_users,email',
+            'phone' => 'required|string|max:20',
             'password' => 'required|string|min:4|confirmed',
+            'company_name' => 'required|string|max:255',
+            'company_code' => 'required|string|alpha_dash|max:50|unique:landlord.tenants,code',
         ]);
 
-        DB::beginTransaction();
+        $user = LandlordUser::create([
+            'name' => $validated['uname'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+        ]);
 
-        try {
-            // 1. Create Tenant
-            $tenantCode = Str::slug($validated['company_name']) . '-' . rand(1000, 9999);
-            $tenant = Tenant::create([
-                'name' => $validated['company_name'],
-                'code' => $tenantCode,
-                'is_active' => true,
-            ]);
+        Auth::guard('landlord')->login($user);
+        $request->session()->regenerate();
 
-            // 2. Create User assigned to the new Tenant
-            $user = User::create([
-                'uname' => $validated['uname'],
-                'password' => Hash::make($validated['password']),
-                'tenant' => $tenant->id,
-                'userrole' => 1, // 1 could be Admin role, based on existing system
-                'is_waiter' => 0,
-            ]);
+        // Store company details in session for the next step
+        $request->session()->put('pending_workspace', [
+            'company_name' => $validated['company_name'],
+            'company_code' => $validated['company_code'],
+        ]);
 
-            DB::commit();
-
-            // 3. Login the user
-            Auth::login($user);
-            $request->session()->regenerate();
-
-            return redirect()->route('dashboard');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'حدث خطأ أثناء التسجيل: ' . $e->getMessage()]);
-        }
+        return redirect()->route('workspaces.create');
     }
 
-    /**
-     * Handle logout.
-     */
     public function logout(Request $request)
     {
-        Auth::logout();
+        if (Auth::guard('landlord')->check()) {
+            Auth::guard('landlord')->logout();
+        }
+        
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        }
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
