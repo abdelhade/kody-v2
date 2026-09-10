@@ -16,7 +16,11 @@ class ItemGroup extends Model
 
     protected $fillable = [
         'gname',
+        'info',
+        'parent',
         'isdeleted',
+        'tenant',
+        'user',
     ];
 
     public function scopeActive(Builder $query): Builder
@@ -27,5 +31,10 @@ class ItemGroup extends Model
     public function items()
     {
         return $this->hasMany(Item::class, 'group1', 'id');
+    }
+
+    public function parentGroup()
+    {
+        return $this->belongsTo(ItemGroup::class, 'parent', 'id');
     }
 }

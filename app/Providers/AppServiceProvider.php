@@ -21,11 +21,21 @@ class AppServiceProvider extends ServiceProvider
     {
         \Inertia\Inertia::share([
             'auth' => function () {
+                $user = \Illuminate\Support\Facades\Auth::user();
                 return [
-                    'user' => \Illuminate\Support\Facades\Auth::user() ? [
-                        'id' => \Illuminate\Support\Facades\Auth::user()->id,
-                        'uname' => \Illuminate\Support\Facades\Auth::user()->uname,
+                    'user' => $user ? [
+                        'id' => $user->id,
+                        'uname' => $user->uname,
                     ] : null,
+                    'permissions' => $user && method_exists($user, 'getAllPermissions')
+                        ? $user->getAllPermissions()->pluck('name')
+                        : [],
+                ];
+            },
+            'flash' => function () {
+                return [
+                    'success' => session('success'),
+                    'error' => session('error'),
                 ];
             },
         ]);

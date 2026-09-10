@@ -12,8 +12,23 @@ use Illuminate\Support\Facades\Auth;
 
 class WorkspaceController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
+        $pending = $request->session()->get('pending_workspace');
+        if (!$pending) {
+            $landlordUser = Auth::guard('landlord')->user();
+            if ($landlordUser) {
+                $tenant = Tenant::where('settings->email', $landlordUser->email)->first();
+                if ($tenant) {
+                    $port = $request->getPort();
+                    $portSuffix = ($port && $port != 80 && $port != 443) ? ':' . $port : '';
+                    $url = $request->getScheme() . '://' . $tenant->domain . $portSuffix . '/login';
+                    return Inertia::location($url);
+                }
+            }
+            Auth::guard('landlord')->logout();
+            return redirect()->route('register');
+        }
         return Inertia::render('Auth/CreateWorkspace');
     }
 

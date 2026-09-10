@@ -55,8 +55,14 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        if (!\App\Models\Tenant::current() && Auth::guard('landlord')->check()) {
-            return redirect()->route('workspaces.create');
+        if (\App\Models\Tenant::current()) {
+            if (Auth::guard('web')->check()) {
+                return redirect()->route('dashboard');
+            }
+        } else {
+            if (Auth::guard('landlord')->check()) {
+                return redirect()->route('workspaces.create');
+            }
         }
         return Inertia::render('Auth/Register');
     }
@@ -100,16 +106,44 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         if (Auth::guard('landlord')->check()) {
+            $user = Auth::guard('landlord')->user();
+            if ($user) {
+                \Illuminate\Support\Facades\DB::table('sessions')->where('user_id', $user->id)->delete();
+                // Find if there is a web user with the same email and delete their sessions too
+                $webUser = \Illuminate\Support\Facades\DB::connection('mysql')->table('users')->where('email', $user->email)->first();
+                if ($webUser) {
+                    \Illuminate\Support\Facades\DB::table('sessions')->where('user_id', $webUser->id)->delete();
+                }
+            }
             Auth::guard('landlord')->logout();
         }
         
         if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+            if ($user) {
+                \Illuminate\Support\Facades\DB::table('sessions')->where('user_id', $user->id)->delete();
+                // Find if there is a landlord user with the same email and delete their sessions too
+                $landlordUser = \App\Models\LandlordUser::where('email', $user->email)->first();
+                if ($landlordUser) {
+                    \Illuminate\Support\Facades\DB::table('sessions')->where('user_id', $landlordUser->id)->delete();
+                }
+            }
             Auth::guard('web')->logout();
         }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('http://' . env('APP_DOMAIN', 'localhost') . ':8000/login');
+    }
+
+    public function checkSubdomain(Request $request)
+    {
+        $code = Str::slug($request->query('code'));
+        if (!$code) {
+            return response()->json(['available' => false]);
+        }
+        $exists = \App\Models\Tenant::where('code', $code)->exists();
+        return response()->json(['available' => !$exists]);
     }
 }
