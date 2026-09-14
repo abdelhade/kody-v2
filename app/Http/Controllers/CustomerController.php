@@ -34,12 +34,12 @@ class CustomerController extends Controller
             'credit' => 'numeric|min:0',
         ]);
 
-        // Generate next customer code (122xxxx)
-        $lastCustomer = Account::clients()->orderBy('code', 'desc')->first();
-        $nextCode = $lastCustomer ? (intval($lastCustomer->code) + 1) : 1220001;
-
         // Parent ID for clients is usually the 'العملاء' folder which is 122
         $parent = Account::where('code', '122')->first();
+        
+        // Generate next customer code (122xxxx)
+        $lastCustomer = $parent ? Account::where('parent_id', $parent->id)->orderBy('code', 'desc')->first() : null;
+        $nextCode = $lastCustomer ? (intval($lastCustomer->code) + 1) : 1220001;
 
         Account::create([
             'code' => (string)$nextCode,
@@ -57,7 +57,7 @@ class CustomerController extends Controller
             'secret' => 0,
             'constant' => 0,
             'balance' => $validated['start_balance'] * ($validated['nature'] == 2 ? -1 : 1),
-            'tenant' => tenant('id') ?? 0,
+            'tenant' => \App\Models\Tenant::current()?->id ?? 0,
         ]);
 
         return redirect()->back()->with('success', 'تم إضافة العميل بنجاح.');

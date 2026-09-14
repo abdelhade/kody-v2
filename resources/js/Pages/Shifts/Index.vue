@@ -1,19 +1,19 @@
 <template>
-  <AppLayout>
-    <div class="space-y-6">
+  <TopNavbarLayout>
+    <div class="max-w-6xl mx-auto p-6 space-y-6">
       <!-- Page Header -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <div>
-          <h2 class="text-2xl font-black text-slate-800">إدارة الورديات وتقارير Z-Report</h2>
-          <p class="text-xs text-slate-500 mt-1">متابعة مبيعات الكاشير اللحظية، تقفيل الوردية، ومطابقة العجز والزيادة في النقدية.</p>
+          <h2 class="text-2xl font-black text-slate-800">إدارة الورديات وتقفيل Z-Report</h2>
+          <p class="text-sm text-slate-500 mt-1">متابعة مبيعات الكاشير اللحظية، تقفيل الوردية، ومطابقة العجز والزيادة في النقدية.</p>
         </div>
         <div>
-          <button
+          <KodyButton
             @click="showCloseModal = true"
-            class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+            icon="CheckBadgeIcon"
           >
-            <span>🔒 إغلاق الوردية الحالية (تقرير Z)</span>
-          </button>
+            تقفيل الوردية الحالية (تقرير Z)
+          </KodyButton>
         </div>
       </div>
 
@@ -22,11 +22,12 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div class="flex items-center gap-2 mb-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping absolute"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 relative"></span>
               <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">الوردية الحالية مفتوحة</span>
               <span class="text-xs text-slate-400 font-mono">({{ currentShiftStats.date }})</span>
             </div>
-            <h3 class="text-xl font-black">مبيعات الوردية الجارية الآن</h3>
+            <h3 class="text-xl font-black">مبيعات الوردية الإجمالية الآن</h3>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 text-center">
@@ -215,13 +216,16 @@
         </div>
       </div>
     </div>
-  </AppLayout>
+  </TopNavbarLayout>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
+import TopNavbarLayout from '@/Layouts/TopNavbarLayout.vue';
+import KodyButton from '@/Components/KodyButton.vue';
+import KodyModal from '@/Components/KodyModal.vue';
+import KodyInput from '@/Components/KodyInput.vue';
 
 const props = defineProps({
   closedShifts: Object,

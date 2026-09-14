@@ -31,7 +31,7 @@ class ItemGroupController extends Controller
             'info' => $validated['info'] ?? null,
             'parent' => $validated['parent'] ?? 0,
             'isdeleted' => 0,
-            'tenant' => tenant('id') ?? 0,
+            'tenant' => \App\Models\Tenant::current()?->id ?? 0,
             'user' => auth()->id() ?? 1,
         ]);
 

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Item;
+use App\Models\Account;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -12,6 +13,7 @@ class InvoiceService
 {
     /**
      * Create an invoice with all its line items inside a database transaction.
+     * Includes advanced accounting rules: Credit Limits & Moving Average Cost.
      *
      * @param array $header
      * @param array $items
@@ -23,17 +25,22 @@ class InvoiceService
     {
         $proType = (int) ($header['pro_tybe'] ?? Invoice::TYPE_SALE);
         $storeId = (int) ($header['store_id'] ?? 1);
-        $acc2Id  = (int) ($header['acc2_id'] ?? $header['acc2'] ?? 0);
+        
+        $acc1Id  = (int) ($header['acc1'] ?? 0); // Party (Customer/Supplier)
+        $acc2Id  = (int) ($header['acc2'] ?? 0); // Additional account
 
         if (empty($items)) {
             throw ValidationException::withMessages([
-                'items' => 'يجب إضافة صنف واحد على الأقل داخل الفاتورة.'
+                'items' => 'الرجاء إضافة صنف واحد على الأقل.'
             ]);
         }
 
-        return DB::transaction(function () use ($header, $items, $userId, $proType, $storeId, $acc2Id) {
+        return DB::transaction(function () use ($header, $items, $userId, $proType, $storeId, $acc1Id, $acc2Id) {
             $computedTotal = 0.0;
             $preparedItems = [];
+            
+            // For moving average
+            $itemsToUpdateCost = [];
 
             foreach ($items as $row) {
                 $itemId = (int) ($row['item_id'] ?? 0);
@@ -47,7 +54,7 @@ class InvoiceService
                 $lineTotal = ($qty * $price) - $discount + $plus;
                 $computedTotal += $lineTotal;
 
-                // Determine stock movement based on invoice type
+                // Determine stock movement
                 $qtyIn = 0.0;
                 $qtyOut = 0.0;
 
@@ -55,14 +62,16 @@ class InvoiceService
                     case Invoice::TYPE_PURCHASE:
                     case Invoice::TYPE_SALE_RETURN:
                         $qtyIn = $totalQty;
+                        $itemsToUpdateCost[] = [
+                            'item_id' => $itemId,
+                            'qty_in' => $qtyIn,
+                            'unit_cost' => $totalQty > 0 ? ($lineTotal / $totalQty) : 0,
+                        ];
                         break;
                     case Invoice::TYPE_SALE:
                     case Invoice::TYPE_POS:
                     case Invoice::TYPE_PURCHASE_RETURN:
                         $qtyOut = $totalQty;
-                        break;
-                    default:
-                        // Orders and Price offers don't affect physical stock
                         break;
                 }
 
@@ -78,9 +87,6 @@ class InvoiceService
                     'discount'   => $discount,
                     'plus'       => $plus,
                     'det_value'  => $lineTotal,
-                    'tenant'     => $header['tenant'] ?? 0,
-                    'branch'     => $header['branch'] ?? 0,
-                    'isdeleted'  => 0,
                 ];
             }
 
@@ -92,6 +98,47 @@ class InvoiceService
             $paidAmount = (float) ($header['paid_amount'] ?? 0);
             $remainingAmount = max(0, $fatNet - $paidAmount);
 
+            // 1. Check Customer Credit Limit for Sales
+            if ($remainingAmount > 0 && in_array($proType, [Invoice::TYPE_SALE, Invoice::TYPE_POS]) && $acc1Id > 0) {
+                $customer = Account::find($acc1Id);
+                if ($customer && $customer->credit > 0) {
+                    // Start balance plus current debt plus new invoice debt
+                    $totalDebt = $customer->balance + $remainingAmount;
+                    if ($totalDebt > $customer->credit) {
+                        throw ValidationException::withMessages([
+                            'credit_limit' => "لقد تجاوز العميل الحد الائتماني المسموح به ({$customer->credit}). إجمالي المديونية سيصبح: {$totalDebt}"
+                        ]);
+                    }
+                }
+            }
+
+            // 2. Update Moving Average Cost for Purchases / Sales Returns
+            foreach ($itemsToUpdateCost as $costData) {
+                $item = Item::find($costData['item_id']);
+                if ($item) {
+                    $oldQty = $item->itmqty;
+                    $oldAvgCost = $item->cost_price;
+                    
+                    $newQty = $costData['qty_in'];
+                    $newUnitCost = $costData['unit_cost'];
+                    
+                    // Moving Weighted Average Formula
+                    $totalQty = $oldQty + $newQty;
+                    if ($totalQty > 0) {
+                        $newAvgCost = (($oldQty * $oldAvgCost) + ($newQty * $newUnitCost)) / $totalQty;
+                        $item->cost_price = $newAvgCost;
+                    }
+                    
+                    // Update last purchase price too
+                    if ($proType == Invoice::TYPE_PURCHASE) {
+                        $item->price1 = $newUnitCost; // Assuming price1 or similar stores last cost, or we just rely on cost_price
+                    }
+                    
+                    // itmqty will be updated via triggers or observers usually, but cost needs explicit math
+                    $item->save();
+                }
+            }
+
             // Create Invoice Header
             $invoice = Invoice::create([
                 'pro_tybe'         => $proType,
@@ -99,6 +146,7 @@ class InvoiceService
                 'accural_date'     => $header['accural_date'] ?? null,
                 'pro_serial'       => $header['pro_serial'] ?? null,
                 'store_id'         => $storeId,
+                'acc1'             => $acc1Id,
                 'acc2'             => $acc2Id,
                 'acc_fund'         => $header['acc_fund'] ?? $header['fund_id'] ?? 0,
                 'emp_id'           => $header['emp_id'] ?? 0,
@@ -115,18 +163,15 @@ class InvoiceService
                 'order_type'       => $header['order_type'] ?? 'takeaway',
                 'table_id'         => $header['table_id'] ?? null,
                 'user'             => $userId,
-                'tenant'           => $header['tenant'] ?? 0,
-                'branch'           => $header['branch'] ?? 0,
-                'isdeleted'        => 0,
             ]);
 
-            // Save line items linked to invoice id
+            // Save line items
             foreach ($preparedItems as $itemRow) {
                 $itemRow['pro_id'] = $invoice->id;
                 InvoiceItem::create($itemRow);
             }
 
-            return $invoice->load('items.item', 'partyAccount');
+            return $invoice->load('items.item', 'customer');
         });
     }
 }

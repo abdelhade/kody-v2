@@ -1,5 +1,5 @@
 <template>
-  <AppLayout>
+  <TopNavbarLayout>
     <div class="mb-6 flex justify-between items-center">
       <div>
         <h1 class="text-2xl font-bold text-slate-800">
@@ -128,16 +128,16 @@
       </div>
       
     </form>
-  </AppLayout>
+  </TopNavbarLayout>
 </template>
 
 <script setup>
 import { computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
+import { useForm, usePage, Link } from '@inertiajs/vue3';
+import TopNavbarLayout from '@/Layouts/TopNavbarLayout.vue';
 
 const props = defineProps({
-  item: { type: Object, default: null },
+  item: { type: Object, default: () => ({}) },
   groups: { type: Array, default: () => [] }
 });
 

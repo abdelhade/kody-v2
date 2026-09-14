@@ -59,7 +59,7 @@ class ItemController extends Controller
                 'salesqty' => 1,
                 'isdeleted' => 0,
                 'user' => auth()->id() ?? 1,
-                'tenant' => tenant('id') ?? 0,
+                'tenant' => \App\Models\Tenant::current()?->id ?? 0,
             ]);
 
             // 2. Create the units & barcodes

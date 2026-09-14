@@ -28,9 +28,9 @@ class SupplierController extends Controller
             'nature' => 'required|in:1,2',
         ]);
 
-        $lastSupplier = Account::suppliers()->orderBy('code', 'desc')->first();
-        $nextCode = $lastSupplier ? (intval($lastSupplier->code) + 1) : 2110001;
         $parent = Account::where('code', '211')->first();
+        $lastSupplier = $parent ? Account::where('parent_id', $parent->id)->orderBy('code', 'desc')->first() : null;
+        $nextCode = $lastSupplier ? (intval($lastSupplier->code) + 1) : 2110001;
 
         Account::create([
             'code' => (string)$nextCode,
@@ -47,7 +47,7 @@ class SupplierController extends Controller
             'secret' => 0,
             'constant' => 0,
             'balance' => $validated['start_balance'] * ($validated['nature'] == 2 ? -1 : 1),
-            'tenant' => tenant('id') ?? 0,
+            'tenant' => \App\Models\Tenant::current()?->id ?? 0,
         ]);
 
         return redirect()->back()->with('success', 'تم إضافة المورد بنجاح.');

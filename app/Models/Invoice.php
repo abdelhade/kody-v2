@@ -71,9 +71,19 @@ class Invoice extends Model
     }
 
     /**
-     * Client or Supplier account (acc2)
+     * Client or Supplier account (acc1 or acc2 depending on legacy usage)
      */
     public function partyAccount()
+    {
+        return $this->belongsTo(Account::class, 'acc2', 'id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Account::class, 'acc1', 'id');
+    }
+
+    public function supplier()
     {
         return $this->belongsTo(Account::class, 'acc2', 'id');
     }

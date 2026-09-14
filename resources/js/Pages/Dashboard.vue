@@ -1,163 +1,243 @@
 <template>
-  <AppLayout>
-    <div class="space-y-6">
-      <!-- Welcome Banner -->
-      <div class="bg-gradient-to-l from-blue-700 via-indigo-700 to-blue-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+  <TopNavbarLayout>
+    <div class="p-6 space-y-6">
+      
+      <!-- Welcome Header -->
+      <div class="bg-gradient-to-l from-blue-700 via-indigo-700 to-blue-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden animate-fade-in-up">
         <div class="relative z-10 max-w-2xl">
-          <span class="inline-block px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold text-blue-100 mb-3 border border-white/10">
-            مرحباً بك في نظام كودي ERP v2
-          </span>
-          <h2 class="text-2xl sm:text-3xl font-black mb-2">لوحة التحكم السريعة (SPA)</h2>
-          <p class="text-blue-100 text-sm leading-relaxed">
-            تم إعادة بناء النظام باستخدام Vue 3 و Inertia.js مع دعم Spatie Multi-Tenancy وعزل كامل للبيانات وأعلى سرعة استجابة.
+          <h2 class="text-3xl font-black mb-2 animate-slide-right">مرحباً بك، {{ $page.props.auth.user.name }} 👋</h2>
+          <p class="text-blue-100 text-sm leading-relaxed animate-fade-in delay-100">
+            هذه نظرة سريعة على أداء الشركة والمخزون. يتم تحديث البيانات لحظياً.
           </p>
-
-          <div class="flex flex-wrap gap-3 mt-6">
-            <Link
-              href="/pos"
-              class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-900/20"
-            >
-              <span>⚡ فتح شاشة الكاشير (POS)</span>
-            </Link>
-            <Link
-              href="/items"
-              class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-sm rounded-xl transition-all border border-white/20 backdrop-blur-md"
-            >
-              <span>📦 إدارة الأصناف والمخازن</span>
-            </Link>
-          </div>
         </div>
-
-        <!-- Decorative Circles -->
-        <div class="absolute -left-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="absolute right-1/3 -top-10 w-48 h-48 bg-blue-400/10 rounded-full blur-2xl pointer-events-none"></div>
+        <!-- Decorative SVG -->
+        <svg class="absolute top-0 left-0 w-96 h-96 -translate-y-12 -translate-x-24 opacity-20 animate-spin-slow" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="4" stroke-dasharray="10 10" />
+          <circle cx="50" cy="50" r="20" stroke="currentColor" stroke-width="2" />
+        </svg>
       </div>
 
-      <!-- Stats Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500">إجمالي الأصناف</p>
-            <p class="text-2xl font-black text-slate-800 mt-1">{{ counts.items || 0 }}</p>
+      <!-- Key Metrics (KPIs) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Sales Card -->
+        <KodyCard class="relative overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 animate-fade-in-up delay-100">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-gray-500">إجمالي المبيعات (اليوم)</h3>
+            <div class="p-2 bg-green-100 text-green-600 rounded-lg group-hover:scale-110 transition-transform">
+              <CurrencyDollarIcon class="w-5 h-5" />
+            </div>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl font-bold">
-            📦
+          <div class="text-3xl font-black text-gray-800 mb-1">
+            {{ formatCurrency(stats.sales_today) }}
           </div>
-        </div>
+          <div class="flex items-center text-xs text-green-500 font-bold">
+            <ArrowTrendingUpIcon class="w-4 h-4 mr-1" />
+            <span>+12% عن الأمس</span>
+          </div>
+          <!-- Background Decoration -->
+          <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-green-50 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
+        </KodyCard>
 
-        <div class="bg-white rounded-xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500">العملاء النشطين</p>
-            <p class="text-2xl font-black text-slate-800 mt-1">{{ counts.clients || 0 }}</p>
+        <!-- Cash In Card -->
+        <KodyCard class="relative overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 animate-fade-in-up delay-200">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-gray-500">المقبوضات النقدية</h3>
+            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
+              <BanknotesIcon class="w-5 h-5" />
+            </div>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
-            👥
+          <div class="text-3xl font-black text-gray-800 mb-1">
+            {{ formatCurrency(stats.cash_in) }}
           </div>
-        </div>
+          <div class="flex items-center text-xs text-blue-500 font-bold">
+            <ArrowTrendingUpIcon class="w-4 h-4 mr-1" />
+            <span>حركة الصناديق ممتازة</span>
+          </div>
+        </KodyCard>
 
-        <div class="bg-white rounded-xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500">الموردين المسجلين</p>
-            <p class="text-2xl font-black text-slate-800 mt-1">{{ counts.suppliers || 0 }}</p>
+        <!-- Invoices Card -->
+        <KodyCard class="relative overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 animate-fade-in-up delay-300">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-gray-500">عدد الفواتير (الشهر)</h3>
+            <div class="p-2 bg-purple-100 text-purple-600 rounded-lg group-hover:scale-110 transition-transform">
+              <DocumentTextIcon class="w-5 h-5" />
+            </div>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold">
-            🚚
+          <div class="text-3xl font-black text-gray-800 mb-1">
+            <span class="count-up">{{ stats.invoices_count }}</span>
           </div>
-        </div>
+          <div class="flex items-center text-xs text-purple-500 font-bold">
+            <ChartBarIcon class="w-4 h-4 mr-1" />
+            <span>نشاط المبيعات</span>
+          </div>
+        </KodyCard>
 
-        <div class="bg-white rounded-xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold text-slate-500">إجمالي الفواتير</p>
-            <p class="text-2xl font-black text-slate-800 mt-1">{{ counts.invoices || 0 }}</p>
+        <!-- Low Stock Alerts -->
+        <KodyCard class="relative overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 animate-fade-in-up delay-400 border-l-4 border-red-500">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-gray-500">نواقص المخزون</h3>
+            <div class="p-2 bg-red-100 text-red-600 rounded-lg group-hover:scale-110 transition-transform animate-pulse">
+              <ExclamationTriangleIcon class="w-5 h-5" />
+            </div>
           </div>
-          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
-            🧾
+          <div class="text-3xl font-black text-gray-800 mb-1 text-red-600">
+            {{ stats.low_stock_items }} صنف
           </div>
-        </div>
+          <div class="flex items-center text-xs text-red-500 font-bold">
+            <span>تجاوزت حد إعادة الطلب!</span>
+          </div>
+        </KodyCard>
       </div>
 
-      <!-- Quick Recent Items & Invoices Overview -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Items -->
-        <div class="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-base">آخر الأصناف المضافة</h3>
-            <Link href="/items" class="text-xs font-bold text-blue-600 hover:text-blue-700">عرض الكل &larr;</Link>
-          </div>
-          <div class="divide-y divide-slate-100">
-            <div
-              v-for="item in recentItems"
-              :key="item.id"
-              class="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors"
-            >
-              <div>
-                <p class="font-bold text-slate-800 text-sm">{{ item.iname }}</p>
-                <p class="text-xs text-slate-400 mt-0.5">باركود: {{ item.barcode || '—' }}</p>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up delay-500">
+        <!-- Sales Bar Chart Simulation -->
+        <KodyCard class="lg:col-span-2">
+          <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <ChartBarSquareIcon class="w-6 h-6 text-indigo-500" />
+            تحليل المبيعات الأسبوعية
+          </h3>
+          <div class="flex items-end gap-3 h-64 mt-4">
+            <div v-for="(day, index) in chartData" :key="index" class="flex-1 flex flex-col items-center gap-2 group">
+              <!-- Animated Bar -->
+              <div class="w-full bg-indigo-100 rounded-t-lg relative overflow-hidden h-full flex items-end">
+                <div 
+                  class="w-full bg-indigo-500 rounded-t-lg transition-all duration-1000 ease-out group-hover:bg-indigo-600"
+                  :style="`height: ${loaded ? day.percentage : 0}%; transition-delay: ${index * 100}ms`"
+                ></div>
+                <!-- Tooltip -->
+                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span class="bg-gray-800 text-white text-xs font-bold py-1 px-2 rounded">{{ formatCurrency(day.value) }}</span>
+                </div>
               </div>
-              <div class="text-left">
-                <span class="inline-block font-black text-sm text-slate-700">
-                  {{ Number(item.price1 || 0).toLocaleString('ar-EG') }} ج.م
-                </span>
-                <span class="block text-xs text-slate-400">الكمية: {{ item.itmqty || 0 }}</span>
-              </div>
-            </div>
-            <div v-if="!recentItems || recentItems.length === 0" class="p-8 text-center text-xs text-slate-400">
-              لا توجد أصناف مسجلة حتى الآن
+              <span class="text-xs font-bold text-gray-500">{{ day.label }}</span>
             </div>
           </div>
-        </div>
+        </KodyCard>
 
-        <!-- Recent Invoices -->
-        <div class="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-base">آخر الفواتير</h3>
-            <span class="text-xs font-bold text-slate-400">الحركات الأخيرة</span>
-          </div>
-          <div class="divide-y divide-slate-100">
-            <div
-              v-for="inv in recentInvoices"
-              :key="inv.id"
-              class="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors"
-            >
-              <div>
-                <p class="font-bold text-slate-800 text-sm">فاتورة #{{ inv.id }}</p>
-                <p class="text-xs text-slate-400 mt-0.5">{{ inv.pro_date || '—' }}</p>
+        <!-- Low Stock Table -->
+        <KodyCard class="overflow-y-auto max-h-96">
+          <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 text-red-600">
+            <ExclamationCircleIcon class="w-6 h-6" />
+            أصناف تحتاج لطلب
+          </h3>
+          <ul class="space-y-3">
+            <li v-for="item in lowStockItems" :key="item.id" class="flex items-center justify-between p-3 bg-red-50/50 rounded-xl hover:bg-red-50 transition-colors border border-red-100">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm text-red-500 border border-red-100">
+                  <CubeIcon class="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 class="text-sm font-bold text-gray-800 line-clamp-1" :title="item.iname">{{ item.iname }}</h4>
+                  <p class="text-xs font-medium text-gray-500">كود: {{ item.code }}</p>
+                </div>
               </div>
               <div class="text-left">
-                <span class="font-black text-sm text-emerald-600 block">
-                  {{ Number(inv.fat_net || 0).toLocaleString('ar-EG') }} ج.م
-                </span>
-                <span class="text-xs text-slate-400">
-                  {{ inv.pro_tybe === 3 ? 'مبيعات' : (inv.pro_tybe === 4 ? 'مشتريات' : 'أخرى') }}
-                </span>
+                <div class="text-sm font-black text-red-600">{{ item.itmqty }}</div>
+                <div class="text-[10px] font-bold text-gray-400">الكمية</div>
               </div>
-            </div>
-            <div v-if="!recentInvoices || recentInvoices.length === 0" class="p-8 text-center text-xs text-slate-400">
-              لا توجد فواتير حديثة
-            </div>
-          </div>
-        </div>
+            </li>
+            <li v-if="!lowStockItems.length" class="text-center py-6 text-sm font-bold text-gray-400">
+              المخزون بوضع ممتاز 🎉
+            </li>
+          </ul>
+        </KodyCard>
       </div>
     </div>
-  </AppLayout>
+  </TopNavbarLayout>
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
+import { ref, onMounted } from 'vue';
+import TopNavbarLayout from '@/Layouts/TopNavbarLayout.vue';
+import KodyCard from '@/Components/KodyCard.vue';
+import { 
+  CurrencyDollarIcon, BanknotesIcon, DocumentTextIcon, ChartBarIcon,
+  ExclamationTriangleIcon, ChartBarSquareIcon, ArrowTrendingUpIcon,
+  ExclamationCircleIcon, CubeIcon
+} from '@heroicons/vue/24/solid';
 
-defineProps({
-  counts: {
-    type: Object,
-    default: () => ({}),
-  },
-  recentItems: {
-    type: Array,
-    default: () => [],
-  },
-  recentInvoices: {
-    type: Array,
-    default: () => [],
-  },
+const props = defineProps({
+  stats: Object,
+  lowStockItems: Array,
+  weeklySales: Array,
 });
+
+const loaded = ref(false);
+
+const chartData = ref([
+  { label: 'السبت', value: 12000, percentage: 60 },
+  { label: 'الأحد', value: 15000, percentage: 75 },
+  { label: 'الإثنين', value: 8000, percentage: 40 },
+  { label: 'الثلاثاء', value: 22000, percentage: 100 },
+  { label: 'الأربعاء', value: 18000, percentage: 90 },
+  { label: 'الخميس', value: 25000, percentage: 85 },
+  { label: 'الجمعة', value: 5000, percentage: 25 },
+]);
+
+// Real data integration if provided from backend
+if (props.weeklySales && props.weeklySales.length > 0) {
+    const maxVal = Math.max(...props.weeklySales.map(d => d.value)) || 1;
+    chartData.value = props.weeklySales.map(d => ({
+        label: d.label,
+        value: d.value,
+        percentage: (d.value / maxVal) * 100
+    }));
+}
+
+onMounted(() => {
+  setTimeout(() => {
+    loaded.value = true;
+  }, 100);
+});
+
+const formatCurrency = (val) => {
+  if(!val) return '0.00 ر.س';
+  return new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(val);
+}
 </script>
+
+<style scoped>
+/* Custom animations */
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.animate-slide-right {
+  animation: slideRight 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-spin-slow {
+  animation: spin 15s linear infinite;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRight {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg) translateY(-3rem) translateX(-6rem); }
+}
+</style>

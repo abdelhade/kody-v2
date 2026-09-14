@@ -24,9 +24,9 @@ class WarehouseController extends Controller
             'address' => 'nullable|string|max:200',
         ]);
 
-        $lastWarehouse = Account::stores()->orderBy('code', 'desc')->first();
-        $nextCode = $lastWarehouse ? (intval($lastWarehouse->code) + 1) : 1230001;
         $parent = Account::where('code', '123')->first();
+        $lastWarehouse = $parent ? Account::where('parent_id', $parent->id)->orderBy('code', 'desc')->first() : null;
+        $nextCode = $lastWarehouse ? (intval($lastWarehouse->code) + 1) : 1230001;
 
         Account::create([
             'code' => (string)$nextCode,
@@ -41,7 +41,7 @@ class WarehouseController extends Controller
             'secret' => 0,
             'constant' => 0,
             'balance' => 0,
-            'tenant' => tenant('id') ?? 0,
+            'tenant' => \App\Models\Tenant::current()?->id ?? 0,
         ]);
 
         return redirect()->back()->with('success', 'تم إضافة المستودع بنجاح.');

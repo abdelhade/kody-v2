@@ -23,7 +23,9 @@ class WorkspaceController extends Controller
                     $port = $request->getPort();
                     $portSuffix = ($port && $port != 80 && $port != 443) ? ':' . $port : '';
                     $url = $request->getScheme() . '://' . $tenant->domain . $portSuffix . '/login';
-                    return Inertia::location($url);
+                    return Inertia::render('Auth/WorkspaceReady', [
+                        'url' => $url
+                    ]);
                 }
             }
             Auth::guard('landlord')->logout();

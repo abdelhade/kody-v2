@@ -22,11 +22,17 @@ Route::middleware('auth:landlord')->group(function () {
     Route::post('/workspaces', [WorkspaceController::class, 'store'])->name('workspaces.store');
 });
 
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::any('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Tenant Application (Must be logged into Web guard & Tenant middleware)
 Route::middleware(['tenant', 'auth:web'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Accounting & Shifts
+    Route::get('/shifts', [\App\Http\Controllers\ShiftController::class, 'index'])->name('shifts.index');
+    Route::post('/shifts/close', [\App\Http\Controllers\ShiftController::class, 'close'])->name('shifts.close');
+    Route::get('/accounting/opening-balances', [\App\Http\Controllers\OpeningBalancesController::class, 'index'])->name('accounting.opening-balances');
+    Route::post('/accounting/opening-balances', [\App\Http\Controllers\OpeningBalancesController::class, 'store']);
 
     // Master Data
     Route::prefix('master-data')->group(function () {
@@ -57,4 +63,15 @@ Route::middleware(['tenant', 'auth:web'])->group(function () {
         Route::put('/items/{id}', [\App\Http\Controllers\ItemController::class, 'update'])->name('items.update');
         Route::delete('/items/{id}', [\App\Http\Controllers\ItemController::class, 'destroy'])->name('items.destroy');
     });
+
+    // Invoices
+    Route::prefix('invoices')->group(function () {
+        Route::get('/', [\App\Http\Controllers\InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('/create', [\App\Http\Controllers\InvoiceController::class, 'create'])->name('invoices.create');
+        Route::post('/', [\App\Http\Controllers\InvoiceController::class, 'store'])->name('invoices.store');
+    });
+
+    // POS
+    Route::get('/pos', [\App\Http\Controllers\PosController::class, 'index'])->name('pos.index');
+    Route::post('/pos/checkout', [\App\Http\Controllers\PosController::class, 'checkout'])->name('pos.checkout');
 });
