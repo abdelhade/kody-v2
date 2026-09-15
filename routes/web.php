@@ -5,8 +5,27 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\WorkspaceController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return Inertia\Inertia::render('Welcome');
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    if (\App\Models\Tenant::current()) {
+        if (\Illuminate\Support\Facades\Auth::guard('web')->check()) {
+            return redirect()->route('dashboard');
+        }
+    } else {
+        $landlordUser = \Illuminate\Support\Facades\Auth::guard('landlord')->user();
+        if ($landlordUser) {
+            $tenant = \App\Models\Tenant::where('settings->email', $landlordUser->email)->first();
+            if ($tenant) {
+                $port = $request->getPort();
+                $portSuffix = ($port && $port != 80 && $port != 443) ? ':' . $port : '';
+                $url = $request->getScheme() . '://' . $tenant->domain . $portSuffix . '/login';
+                return Inertia\Inertia::render('Welcome', [
+                    'isLoggedIn' => true,
+                    'tenantUrl' => $url,
+                ]);
+            }
+        }
+    }
+    return Inertia\Inertia::render('Welcome', ['isLoggedIn' => false]);
 })->name('welcome');
 
 // Removed guest:landlord middleware to avoid redirect loops. Handled in Controller.
@@ -31,6 +50,15 @@ Route::middleware(['tenant', 'auth:web'])->group(function () {
     // Accounting & Shifts
     Route::get('/shifts', [\App\Http\Controllers\ShiftController::class, 'index'])->name('shifts.index');
     Route::post('/shifts/close', [\App\Http\Controllers\ShiftController::class, 'close'])->name('shifts.close');
+    Route::get('/vouchers', [\App\Http\Controllers\VoucherController::class, 'index'])->name('vouchers.index');
+    Route::post('/vouchers', [\App\Http\Controllers\VoucherController::class, 'store'])->name('vouchers.store');
+    
+    // Reports
+    Route::prefix('reports')->group(function () {
+        Route::get('/account-statement', [\App\Http\Controllers\ReportController::class, 'accountStatement'])->name('reports.account-statement');
+        Route::get('/trial-balance', [\App\Http\Controllers\ReportController::class, 'trialBalance'])->name('reports.trial-balance');
+        Route::get('/profit-loss', [\App\Http\Controllers\ReportController::class, 'profitLoss'])->name('reports.profit-loss');
+    });
     Route::get('/accounting/opening-balances', [\App\Http\Controllers\OpeningBalancesController::class, 'index'])->name('accounting.opening-balances');
     Route::post('/accounting/opening-balances', [\App\Http\Controllers\OpeningBalancesController::class, 'store']);
 

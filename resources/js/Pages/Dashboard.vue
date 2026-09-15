@@ -2,20 +2,7 @@
   <TopNavbarLayout>
     <div class="p-6 space-y-6">
       
-      <!-- Welcome Header -->
-      <div class="bg-gradient-to-l from-blue-700 via-indigo-700 to-blue-900 rounded-2xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden animate-fade-in-up">
-        <div class="relative z-10 max-w-2xl">
-          <h2 class="text-3xl font-black mb-2 animate-slide-right">مرحباً بك، {{ $page.props.auth.user.name }} 👋</h2>
-          <p class="text-blue-100 text-sm leading-relaxed animate-fade-in delay-100">
-            هذه نظرة سريعة على أداء الشركة والمخزون. يتم تحديث البيانات لحظياً.
-          </p>
-        </div>
-        <!-- Decorative SVG -->
-        <svg class="absolute top-0 left-0 w-96 h-96 -translate-y-12 -translate-x-24 opacity-20 animate-spin-slow" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="40" stroke="currentColor" stroke-width="4" stroke-dasharray="10 10" />
-          <circle cx="50" cy="50" r="20" stroke="currentColor" stroke-width="2" />
-        </svg>
-      </div>
+
 
       <!-- Key Metrics (KPIs) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -2,6 +2,11 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
+const props = defineProps({
+    isLoggedIn: Boolean,
+    tenantUrl: String
+});
+
 const isMobileMenuOpen = ref(false);
 </script>
 
@@ -24,8 +29,18 @@ const isMobileMenuOpen = ref(false);
                         </div>
                     </div>
                     <div class="hidden sm:flex sm:items-center sm:mr-6 gap-4">
-                        <Link :href="route('login')" class="text-sm text-gray-700 hover:text-gray-900 font-medium">تسجيل الدخول</Link>
-                        <Link :href="route('register')" class="bg-[#714B67] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#5a3a52] transition duration-150">ابدأ الآن مجاناً</Link>
+                        <template v-if="isLoggedIn">
+                            <a :href="tenantUrl" class="bg-[#714B67] text-white px-6 py-2 rounded-md text-sm font-bold hover:bg-[#5a3a52] transition duration-150 shadow-md">
+                                الدخول إلى نظام شركتك
+                            </a>
+                            <a href="/logout" class="text-sm text-gray-500 hover:text-red-600 font-medium ml-4 transition">
+                                تسجيل خروج
+                            </a>
+                        </template>
+                        <template v-else>
+                            <Link :href="route('login')" class="text-sm text-gray-700 hover:text-gray-900 font-medium">تسجيل الدخول</Link>
+                            <Link :href="route('register')" class="bg-[#714B67] text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-[#5a3a52] transition duration-150">ابدأ الآن مجاناً</Link>
+                        </template>
                     </div>
                     <!-- Mobile menu button -->
                     <div class="-mr-2 flex items-center sm:hidden">
@@ -46,7 +61,13 @@ const isMobileMenuOpen = ref(false);
                 </div>
                 <div class="pt-4 pb-1 border-t border-gray-200">
                     <div class="mt-3 space-y-1 text-right pr-4">
-                        <Link :href="route('login')" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">تسجيل الدخول</Link>
+                        <template v-if="isLoggedIn">
+                            <a :href="tenantUrl" class="block px-4 py-2 text-base font-bold text-[#714B67] hover:bg-gray-100">الدخول إلى نظام شركتك</a>
+                            <a href="/logout" class="block px-4 py-2 text-base font-medium text-red-500 hover:text-red-700 hover:bg-gray-100 mt-2">تسجيل خروج</a>
+                        </template>
+                        <template v-else>
+                            <Link :href="route('login')" class="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">تسجيل الدخول</Link>
+                        </template>
                     </div>
                 </div>
             </div>

@@ -34,6 +34,13 @@ const props = defineProps({
                                         <div class="px-1 py-1">
                                             <MenuItem v-slot="{ active }"><Link href="/customers" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">العملاء</Link></MenuItem>
                                             <MenuItem v-slot="{ active }"><Link href="/suppliers" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">الموردين</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/cashboxes" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">الصناديق</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/banks" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">البنوك</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/other-debtors" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">المدينين الآخرين</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/other-creditors" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">الدائنين الآخرين</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/assets" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">الأصول</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/revenues" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">الإيرادات</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/expenses" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">المصروفات</Link></MenuItem>
                                             <MenuItem v-slot="{ active }"><Link href="/warehouses" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">المخازن</Link></MenuItem>
                                             <MenuItem v-slot="{ active }"><Link href="/item-groups" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">مجموعات الأصناف</Link></MenuItem>
                                             <MenuItem v-slot="{ active }"><Link href="/items" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">الأصناف</Link></MenuItem>
@@ -42,8 +49,29 @@ const props = defineProps({
                                 </transition>
                             </Menu>
 
-                            <Link href="/dashboard" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-white/10 transition">الفواتير</Link>
-                            <Link href="/dashboard" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-white/10 transition">نقطة البيع POS</Link>
+                            <Link href="/invoices" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-white/10 transition">الفواتير</Link>
+                            <Link href="/pos" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md hover:bg-white/10 transition">نقطة البيع POS</Link>
+                            
+                            <Menu as="div" class="relative inline-block text-right">
+                                <MenuButton class="inline-flex w-full justify-center rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-white/10 focus:outline-none">
+                                    المالية والحسابات
+                                    <ChevronDownIcon class="mr-2 -ml-1 h-5 w-5 text-white" aria-hidden="true" />
+                                </MenuButton>
+                                <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
+                                    <MenuItems class="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <div class="px-1 py-1">
+                                            <MenuItem v-slot="{ active }"><Link href="/vouchers" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">سندات القبض والصرف</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/accounting/opening-balances" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">الأرصدة الافتتاحية</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/shifts" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">تقفيل الورديات</Link></MenuItem>
+                                        </div>
+                                        <div class="px-1 py-1 border-t border-gray-100">
+                                            <MenuItem v-slot="{ active }"><Link href="/reports/account-statement" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">كشف حساب</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/reports/trial-balance" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">ميزان المراجعة</Link></MenuItem>
+                                            <MenuItem v-slot="{ active }"><Link href="/reports/profit-loss" :class="[active ? 'bg-[#017E84] text-white' : 'text-gray-900', 'block px-4 py-2 text-sm rounded-md']">أرباح وخسائر</Link></MenuItem>
+                                        </div>
+                                    </MenuItems>
+                                </transition>
+                            </Menu>
                         </div>
                     </div>
 
